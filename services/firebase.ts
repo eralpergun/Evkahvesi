@@ -24,4 +24,4 @@ isSupported().then(supported => {
   if (supported) {
     getAnalytics(app);
   }
-});
+}).catch(err => console.error("Analytics init error:", err));
