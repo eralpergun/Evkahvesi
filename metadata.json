@@ -1,0 +1,5 @@
+{
+  "name": "BrewPulse - Smart Coffee System",
+  "description": "A sophisticated coffee ordering application with dedicated guest and admin portals, featuring real-time order tracking and AI-powered barista recommendations.",
+  "requestFramePermissions": []
+}
