@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0BL_jivW7DP1jZfNT_gFnRM3IgPgnWx8",
@@ -13,11 +13,15 @@ const firebaseConfig = {
   measurementId: "G-G2K5XWE0EJ"
 };
 
-// Firebase başlat
+// Firebase Uygulamasını Başlat
 const app = initializeApp(firebaseConfig);
+
+// Firestore Veritabanı Servisini Dışa Aktar
 export const db = getFirestore(app);
 
-// Analytics opsiyonel (Browser ortamında çalışır)
-if (typeof window !== "undefined") {
-  getAnalytics(app);
-}
+// Analytics'i yalnızca desteklenen tarayıcı ortamlarında başlat
+isSupported().then(supported => {
+  if (supported) {
+    getAnalytics(app);
+  }
+});

@@ -23,19 +23,26 @@ const App: React.FC = () => {
 
   // Firebase'den verileri gerçek zamanlı dinle
   useEffect(() => {
-    const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const ordersArray: Order[] = [];
-      querySnapshot.forEach((doc) => {
-        ordersArray.push({ id: doc.id, ...doc.data() } as Order);
+    try {
+      const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const ordersArray: Order[] = [];
+        querySnapshot.forEach((doc) => {
+          ordersArray.push({ id: doc.id, ...doc.data() } as Order);
+        });
+        setOrders(ordersArray);
+      }, (error) => {
+        console.error("Firebase Sync Error:", error);
+        if (error.code === 'permission-denied') {
+          console.error("Lütfen Firebase Console'dan Firestore kurallarını (Rules) güncelleyin!");
+        }
       });
-      setOrders(ordersArray);
-    }, (error) => {
-      console.error("Firebase Sync Error:", error);
-    });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (e) {
+      console.error("Firebase initialization error:", e);
+    }
   }, []);
 
   const handlePlaceOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'status'>) => {
@@ -47,7 +54,7 @@ const App: React.FC = () => {
       });
     } catch (error) {
       console.error("Order error:", error);
-      alert("Sipariş verilirken bir hata oluştu.");
+      alert("Sipariş verilirken bir hata oluştu. Lütfen Firebase kurallarını kontrol edin.");
     }
   };
 
