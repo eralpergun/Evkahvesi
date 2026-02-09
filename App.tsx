@@ -1,66 +1,72 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole, Order } from './types';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import GuestDashboard from './components/GuestDashboard';
 import AdminDashboard from './components/AdminDashboard';
-
-const STORAGE_KEY = 'evcoffee_orders_v1';
-const CHANNEL_NAME = 'evcoffee_sync_channel';
+import { db } from './services/firebase';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  onSnapshot, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
 
 const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.NONE);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [channel, setChannel] = useState<BroadcastChannel | null>(null);
 
+  // Firebase'den verileri gerçek zamanlı dinle
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setOrders(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load orders");
-      }
-    }
+    const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const ordersArray: Order[] = [];
+      querySnapshot.forEach((doc) => {
+        ordersArray.push({ id: doc.id, ...doc.data() } as Order);
+      });
+      setOrders(ordersArray);
+    }, (error) => {
+      console.error("Firebase Sync Error:", error);
+    });
 
-    const bc = new BroadcastChannel(CHANNEL_NAME);
-    bc.onmessage = (event) => {
-      if (event.data.type === 'SYNC_ORDERS') {
-        setOrders(event.data.payload);
-      }
-    };
-    setChannel(bc);
-
-    return () => bc.close();
+    return () => unsubscribe();
   }, []);
 
-  const syncOrders = useCallback((newOrders: Order[]) => {
-    setOrders(newOrders);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrders));
-    if (channel) {
-      channel.postMessage({ type: 'SYNC_ORDERS', payload: newOrders });
+  const handlePlaceOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'status'>) => {
+    try {
+      await addDoc(collection(db, "orders"), {
+        ...orderData,
+        timestamp: Date.now(),
+        status: 'PENDING'
+      });
+    } catch (error) {
+      console.error("Order error:", error);
+      alert("Sipariş verilirken bir hata oluştu.");
     }
-  }, [channel]);
-
-  const handlePlaceOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'status'>) => {
-    const newOrder: Order = {
-      ...orderData,
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      status: 'PENDING'
-    };
-    syncOrders([...orders, newOrder]);
   };
 
-  const handleUpdateStatus = (id: string, status: Order['status']) => {
-    const updated = orders.map(o => o.id === id ? { ...o, status } : o);
-    syncOrders(updated);
+  const handleUpdateStatus = async (id: string, status: Order['status']) => {
+    try {
+      const orderRef = doc(db, "orders", id);
+      await updateDoc(orderRef, { status });
+    } catch (error) {
+      console.error("Update error:", error);
+    }
   };
 
-  const handleClearOrder = (id: string) => {
-    const updated = orders.filter(o => o.id !== id);
-    syncOrders(updated);
+  const handleClearOrder = async (id: string) => {
+    try {
+      const orderRef = doc(db, "orders", id);
+      await deleteDoc(orderRef);
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
   };
 
   const handleLogout = () => {
