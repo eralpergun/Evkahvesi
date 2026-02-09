@@ -7,11 +7,11 @@ export const getBaristaSuggestion = async (mood: string): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `The user is feeling: ${mood}. As a world-class barista, suggest one of our coffees (Latte Macchiato, Americano, Espresso, or Caramel Macchiato) and give a 1-sentence poetic reason why it fits their mood. Return just the suggestion and the reason.`,
+      contents: `Kullanıcı şu an böyle hissediyor: ${mood}. Dünya standartlarında bir barista olarak, menümüzdeki kahvelerden birini (Latte Macchiato, Americano, Espresso veya Karamel Macchiato) öner ve neden bu moduna uygun olduğuna dair Türkçe, şiirsel tek bir cümle yaz. Sadece öneriyi ve sebebi döndür.`,
     });
-    return response.text || "I recommend an Espresso to kickstart your day!";
+    return response.text || "Güne enerjik başlamanız için bir Espresso öneririm!";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "The barista suggests a Latte Macchiato for a smooth, comforting experience.";
+    return "Barista, yumuşak ve rahatlatıcı bir deneyim için Latte Macchiato öneriyor.";
   }
 };

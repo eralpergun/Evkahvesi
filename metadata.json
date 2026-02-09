@@ -1,5 +1,5 @@
 {
-  "name": "BrewPulse - Smart Coffee System",
-  "description": "A sophisticated coffee ordering application with dedicated guest and admin portals, featuring real-time order tracking and AI-powered barista recommendations.",
+  "name": "Ev Coffee - Akıllı Kahve Sistemi",
+  "description": "Özel misafir ve yönetici portalları, gerçek zamanlı sipariş takibi ve yapay zeka destekli barista önerileri sunan sofistike bir kahve sipariş uygulaması.",
   "requestFramePermissions": []
 }

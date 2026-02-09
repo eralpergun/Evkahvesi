@@ -6,15 +6,14 @@ import Layout from './components/Layout';
 import GuestDashboard from './components/GuestDashboard';
 import AdminDashboard from './components/AdminDashboard';
 
-const STORAGE_KEY = 'brewpulse_orders';
-const CHANNEL_NAME = 'brewpulse_sync';
+const STORAGE_KEY = 'evcoffee_orders_v1';
+const CHANNEL_NAME = 'evcoffee_sync_channel';
 
 const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.NONE);
   const [orders, setOrders] = useState<Order[]>([]);
   const [channel, setChannel] = useState<BroadcastChannel | null>(null);
 
-  // Sync state with LocalStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -25,7 +24,6 @@ const App: React.FC = () => {
       }
     }
 
-    // Set up BroadcastChannel for cross-tab real-time sync
     const bc = new BroadcastChannel(CHANNEL_NAME);
     bc.onmessage = (event) => {
       if (event.data.type === 'SYNC_ORDERS') {
@@ -37,7 +35,6 @@ const App: React.FC = () => {
     return () => bc.close();
   }, []);
 
-  // Persistent storage and broadcast helper
   const syncOrders = useCallback((newOrders: Order[]) => {
     setOrders(newOrders);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrders));

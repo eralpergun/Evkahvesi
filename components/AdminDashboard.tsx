@@ -1,6 +1,7 @@
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Order } from '../types';
+import { SIZE_LABELS } from '../constants';
 
 interface AdminDashboardProps {
   orders: Order[];
@@ -16,14 +17,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
   const completedCount = useMemo(() => orders.filter(o => o.status === 'COMPLETED').length, [orders]);
   const sortedOrders = useMemo(() => [...orders].sort((a, b) => b.timestamp - a.timestamp), [orders]);
 
-  // Detect new orders for "Pop up" notification
   useEffect(() => {
     if (orders.length > lastOrderCount) {
       const newestOrder = orders.reduce((prev, current) => (prev.timestamp > current.timestamp) ? prev : current);
       setNewOrderToast({ name: newestOrder.guestName, type: newestOrder.coffeeType });
-      
-      // Auto-hide toast
-      const timer = setTimeout(() => setNewOrderToast(null), 5000);
+      const timer = setTimeout(() => setNewOrderToast(null), 6000);
       return () => clearTimeout(timer);
     }
     setLastOrderCount(orders.length);
@@ -31,16 +29,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
 
   return (
     <div className="space-y-8 relative">
-      {/* Pop-up Notification for New Orders */}
       {newOrderToast && (
         <div className="fixed top-24 right-6 z-[60] animate-bounce-in">
-          <div className="bg-stone-900 text-white p-5 rounded-2xl shadow-2xl border border-stone-700 flex items-center gap-4 min-w-[300px]">
-            <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-xl shrink-0">☕</div>
+          <div className="bg-stone-900 text-white p-6 rounded-2xl shadow-2xl border border-stone-800 flex items-center gap-5 min-w-[340px]">
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-2xl shrink-0 backdrop-blur-sm">☕</div>
             <div>
-              <div className="text-xs font-bold text-orange-400 uppercase tracking-widest">New Order Incoming!</div>
-              <div className="font-serif text-lg leading-tight">{newOrderToast.name} ordered a {newOrderToast.type}</div>
+              <div className="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] mb-1">Yeni Sipariş!</div>
+              <div className="font-serif text-lg leading-tight">{newOrderToast.name} için bir {newOrderToast.type}</div>
             </div>
-            <button onClick={() => setNewOrderToast(null)} className="ml-auto text-stone-500 hover:text-white">
+            <button onClick={() => setNewOrderToast(null)} className="ml-auto p-1 text-stone-600 hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -49,138 +46,116 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
         </div>
       )}
 
-      {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
-          <div className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Queue</div>
+          <div className="text-stone-400 text-[9px] font-black uppercase tracking-widest mb-1">Toplam Kuyruk</div>
           <div className="text-4xl font-serif text-stone-800">{orders.length}</div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
-          <div className="text-orange-500 text-[10px] font-bold uppercase tracking-widest mb-1">Active Orders</div>
-          <div className="text-4xl font-serif text-orange-600">{pendingCount}</div>
+          <div className="text-stone-400 text-[9px] font-black uppercase tracking-widest mb-1">Bekleyenler</div>
+          <div className="text-4xl font-serif text-stone-600">{pendingCount}</div>
         </div>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
-          <div className="text-green-500 text-[10px] font-bold uppercase tracking-widest mb-1">Completed</div>
-          <div className="text-4xl font-serif text-green-600">{completedCount}</div>
+          <div className="text-stone-400 text-[9px] font-black uppercase tracking-widest mb-1">Tamamlanan</div>
+          <div className="text-4xl font-serif text-stone-800">{completedCount}</div>
         </div>
-        <div className="bg-stone-900 p-6 rounded-3xl shadow-xl border border-stone-800">
-          <div className="text-stone-500 text-[10px] font-bold uppercase tracking-widest mb-1">Barista Efficiency</div>
+        <div className="bg-stone-900 p-6 rounded-3xl shadow-xl">
+          <div className="text-stone-500 text-[9px] font-black uppercase tracking-widest mb-1">Hizmet Puanı</div>
           <div className="text-4xl font-serif text-white">{orders.length > 0 ? Math.round((completedCount / orders.length) * 100) : 0}%</div>
         </div>
       </div>
 
-      {/* Live Order Feed */}
       <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-        <div className="px-8 py-6 border-b border-stone-50 flex justify-between items-center bg-stone-50/30">
+        <div className="px-8 py-6 border-b border-stone-50 flex justify-between items-center bg-stone-50/20">
           <div>
-            <h3 className="text-2xl font-serif text-stone-800">Order Management</h3>
-            <p className="text-xs text-stone-500 mt-1 font-medium italic">Processing your guest requests in real-time.</p>
+            <h3 className="text-2xl font-serif text-stone-800 tracking-tight">Sipariş Paneli</h3>
+            <p className="text-xs text-stone-400 mt-1 font-medium italic">Gerçek zamanlı talepler izleniyor.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold rounded-full border border-green-100">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-              Live Sync Active
-            </span>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Canlı Bağlantı</span>
           </div>
         </div>
 
         {orders.length === 0 ? (
           <div className="p-24 text-center">
-            <div className="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-200 mb-6">
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto text-stone-200 mb-6">
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-xl font-serif text-stone-400">Your coffee queue is currently empty</p>
-            <p className="text-sm text-stone-300 mt-2">New orders from guests will appear here automatically.</p>
+            <p className="text-lg font-serif text-stone-400">Aktif sipariş bulunmuyor...</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-stone-50/50 text-[10px] text-stone-400 font-bold uppercase tracking-widest border-b border-stone-100">
-                  <th className="px-8 py-5">Guest Information</th>
-                  <th className="px-8 py-5">Coffee Selection</th>
-                  <th className="px-8 py-5">Details</th>
-                  <th className="px-8 py-5">Current Status</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
+                <tr className="bg-stone-50/50 text-[10px] text-stone-400 font-black uppercase tracking-[0.15em] border-b border-stone-100">
+                  <th className="px-8 py-5">Misafir</th>
+                  <th className="px-8 py-5">Seçim</th>
+                  <th className="px-8 py-5">Sertlik</th>
+                  <th className="px-8 py-5">Durum</th>
+                  <th className="px-8 py-5 text-right">İşlemler</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
                 {sortedOrders.map(order => (
-                  <tr key={order.id} className={`group hover:bg-stone-50/50 transition-all ${order.status === 'COMPLETED' ? 'bg-stone-50/20 grayscale-[0.3]' : ''}`}>
+                  <tr key={order.id} className={`group transition-all ${order.status === 'COMPLETED' ? 'bg-stone-50/20 grayscale' : 'hover:bg-stone-50/30'}`}>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
-                          order.status === 'COMPLETED' ? 'bg-stone-200 text-stone-500' : 'bg-orange-100 text-orange-600'
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm shadow-sm ${
+                          order.status === 'COMPLETED' ? 'bg-stone-200 text-stone-500' : 'bg-stone-800 text-white'
                         }`}>
                           {order.guestName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-bold text-stone-800 text-base">{order.guestName}</div>
-                          <div className="text-[10px] text-stone-400 font-mono uppercase tracking-tighter mt-0.5">
-                            {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          <div className="font-bold text-stone-800">{order.guestName}</div>
+                          <div className="text-[10px] text-stone-300 font-mono mt-0.5">
+                            {new Date(order.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="text-sm font-bold text-stone-700">{order.coffeeType}</div>
-                      <div className="inline-block px-2 py-0.5 bg-stone-100 text-stone-500 rounded text-[10px] font-bold uppercase mt-1 tracking-tight">
-                        {order.size}
-                      </div>
+                      <div className="text-sm font-black text-stone-700">{order.coffeeType}</div>
+                      <div className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mt-1">{SIZE_LABELS[order.size]}</div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 bg-stone-100 h-1.5 rounded-full w-24 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-1000 ${
-                              order.status === 'COMPLETED' ? 'bg-stone-400' : 'bg-orange-500'
-                            }`} 
-                            style={{ width: `${order.percentage}%` }}
-                          ></div>
+                          <div className={`h-full rounded-full transition-all duration-700 ${order.status === 'COMPLETED' ? 'bg-stone-300' : 'bg-stone-800'}`} style={{ width: `${order.percentage}%` }}></div>
                         </div>
-                        <span className={`text-xs font-black ${order.status === 'COMPLETED' ? 'text-stone-400' : 'text-orange-600'}`}>
-                          {order.percentage}%
-                        </span>
+                        <span className="text-[10px] font-black text-stone-500">%{order.percentage}</span>
                       </div>
-                      <div className="text-[9px] text-stone-400 uppercase font-bold mt-1.5 tracking-tighter">Strength Profile</div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex items-center gap-3">
-                         <select 
-                          value={order.status}
-                          onChange={(e) => onUpdateStatus(order.id, e.target.value as Order['status'])}
-                          className={`text-[11px] font-black px-4 py-2 rounded-xl outline-none border-2 shadow-sm transition-all cursor-pointer ${
-                            order.status === 'PENDING' ? 'bg-orange-50 text-orange-700 border-orange-100 hover:border-orange-300' :
-                            order.status === 'PREPARING' ? 'bg-blue-50 text-blue-700 border-blue-100 hover:border-blue-300' :
-                            'bg-green-50 text-green-700 border-green-100 hover:border-green-300'
-                          }`}
-                        >
-                          <option value="PENDING">WAITING</option>
-                          <option value="PREPARING">BREWING</option>
-                          <option value="COMPLETED">SERVED</option>
-                        </select>
-                      </div>
+                      <select 
+                        value={order.status}
+                        onChange={(e) => onUpdateStatus(order.id, e.target.value as Order['status'])}
+                        className={`text-[10px] font-black px-4 py-2 rounded-xl border transition-all cursor-pointer outline-none ${
+                          order.status === 'PENDING' ? 'bg-white text-stone-800 border-stone-200' :
+                          order.status === 'PREPARING' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                          'bg-green-50 text-green-700 border-green-100'
+                        }`}
+                      >
+                        <option value="PENDING">BEKLİYOR</option>
+                        <option value="PREPARING">HAZIRLANIYOR</option>
+                        <option value="COMPLETED">TAMAMLANDI</option>
+                      </select>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         {order.status !== 'COMPLETED' && (
                           <button 
                             onClick={() => onUpdateStatus(order.id, 'COMPLETED')}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
-                            title="Mark as Completed"
+                            className="px-4 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Complete
+                            Servis Et
                           </button>
                         )}
                         <button 
                           onClick={() => onClearOrder(order.id)}
-                          className="p-2.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                          title="Archive Order"
+                          className="p-2.5 text-stone-200 hover:text-red-500 transition-all rounded-xl hover:bg-red-50"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -203,7 +178,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
           100% { transform: translateX(0); }
         }
         .animate-bounce-in {
-          animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          animation: bounce-in 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
       `}</style>
     </div>
