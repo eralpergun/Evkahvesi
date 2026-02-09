@@ -9,8 +9,8 @@ const firebaseConfig = {
   projectId: "evcoffeetr",
   storageBucket: "evcoffeetr.firebasestorage.app",
   messagingSenderId: "421092198821",
-  appId: "1:421092198821:web:b7edececde70eb049a004c",
-  measurementId: "G-G2K5XWE0EJ"
+  appId: "1:421092198821:web:17d840eaadb1a9c69a004c",
+  measurementId: "G-GR9RWVJV1D"
 };
 
 // Firebase Uygulamasını Başlat
