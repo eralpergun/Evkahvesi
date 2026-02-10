@@ -1,19 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { COFFEE_OPTIONS, SIZES, SIZE_LABELS } from '../constants';
 import { CoffeeType, CoffeeSize, Order } from '../types';
 
 interface GuestDashboardProps {
-  onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<boolean>;
+  orders: Order[]; // Tüm siparişleri al ki durumu takip edebilelim
+  onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<string | null>;
 }
 
-const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
+const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder }) => {
   const [name, setName] = useState('');
   const [selectedCoffee, setSelectedCoffee] = useState<CoffeeType | null>(null);
   const [size, setSize] = useState<CoffeeSize>(CoffeeSize.MEDIUM);
   const [percentage, setPercentage] = useState(50);
-  const [orderPlaced, setOrderPlaced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [trackedOrderId, setTrackedOrderId] = useState<string | null>(null);
+
+  // Takip edilen siparişi bul
+  const trackedOrder = useMemo(() => {
+    if (!trackedOrderId) return null;
+    return orders.find(o => o.id === trackedOrderId) || null;
+  }, [orders, trackedOrderId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,28 +28,115 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
     
     setIsSubmitting(true);
     try {
-      await onPlaceOrder({
+      const orderId = await onPlaceOrder({
         guestName: name,
         coffeeType: selectedCoffee,
         size,
         percentage
       });
 
-      // Sadece işlem başarılı olursa buraya gelir
-      setOrderPlaced(true);
-      setTimeout(() => setOrderPlaced(false), 3000);
+      if (orderId) {
+        setTrackedOrderId(orderId);
+      }
       
-      setTimeout(() => {
-        setSelectedCoffee(null);
-      }, 500);
+      // Formu temizle ama isim kalsın (bir sonraki sipariş için kolaylık)
+      setSelectedCoffee(null);
+      
     } catch (error) {
-      // Hata durumunda App.tsx zaten alert gösterir, burada ekstra bir şey yapmaya gerek yok
-      // ama isSubmitting'i false yapmalıyız
+      // Hata App.tsx'te handle ediliyor
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleNewOrder = () => {
+    setTrackedOrderId(null);
+    setSelectedCoffee(null);
+  };
+
+  // Eğer aktif bir sipariş takip ediliyorsa, Durum Ekranını göster
+  if (trackedOrder) {
+    const isCompleted = trackedOrder.status === 'COMPLETED';
+    const isPreparing = trackedOrder.status === 'PREPARING';
+    const isPending = trackedOrder.status === 'PENDING';
+
+    return (
+      <div className="max-w-2xl mx-auto py-10 animate-fade-in">
+        <div className="bg-white rounded-[2.5rem] shadow-xl border border-stone-100 overflow-hidden relative">
+          
+          {/* Durum Başlığı */}
+          <div className={`p-10 text-center transition-colors duration-500 ${
+            isCompleted ? 'bg-stone-800 text-white' : 
+            isPreparing ? 'bg-orange-50 text-stone-800' : 
+            'bg-stone-50 text-stone-600'
+          }`}>
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg mb-6 text-4xl">
+              {isCompleted ? '☕' : isPreparing ? '🔥' : '⏳'}
+            </div>
+            <h2 className="text-3xl font-serif font-bold mb-2">
+              {isCompleted ? 'Afiyet Olsun!' : 
+               isPreparing ? 'Hazırlanıyor...' : 
+               'Sıraya Alındı'}
+            </h2>
+            <p className="text-sm font-medium opacity-80 uppercase tracking-widest">
+              {isCompleted ? 'Kahveniz servise hazır.' : 
+               isPreparing ? 'Barista kahvenizi hazırlıyor.' : 
+               'Siparişiniz baristaya iletildi.'}
+            </p>
+          </div>
+
+          {/* İlerleme Çubuğu */}
+          <div className="px-10 py-8">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-stone-300 mb-4">
+              <span className={isPending || isPreparing || isCompleted ? 'text-stone-800' : ''}>Sırada</span>
+              <span className={isPreparing || isCompleted ? 'text-stone-800' : ''}>Hazırlanıyor</span>
+              <span className={isCompleted ? 'text-stone-800' : ''}>Hazır</span>
+            </div>
+            <div className="h-3 bg-stone-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-stone-800 transition-all duration-1000 ease-out"
+                style={{ 
+                  width: isCompleted ? '100%' : isPreparing ? '66%' : '33%' 
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Sipariş Detayı */}
+          <div className="px-10 pb-10">
+            <div className="bg-stone-50 rounded-2xl p-6 border border-stone-100 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm">
+                ☕
+              </div>
+              <div className="flex-1">
+                <div className="text-lg font-serif font-bold text-stone-800">{trackedOrder.coffeeType}</div>
+                <div className="text-xs text-stone-500 font-medium">
+                  {SIZE_LABELS[trackedOrder.size]} • %{trackedOrder.percentage} Sertlik
+                </div>
+              </div>
+            </div>
+
+            {isCompleted && (
+              <button 
+                onClick={handleNewOrder}
+                className="w-full mt-8 py-5 bg-stone-800 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-stone-900 transition-all shadow-lg active:scale-[0.98]"
+              >
+                Yeni Sipariş Ver
+              </button>
+            )}
+
+            {!isCompleted && (
+               <p className="text-center mt-8 text-xs text-stone-400 italic">
+                 Ekran otomatik güncellenecektir...
+               </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Sipariş formu (Mevcut Görünüm)
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-10 text-center">
@@ -151,22 +245,15 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
 
         <button 
           type="submit"
-          disabled={!name || !selectedCoffee || orderPlaced || isSubmitting}
+          disabled={!name || !selectedCoffee || isSubmitting}
           className={`w-full py-6 rounded-3xl text-xl font-bold shadow-2xl transition-all flex items-center justify-center gap-3 ${
-            orderPlaced 
-              ? 'bg-green-500 text-white cursor-default'
+             isSubmitting
+              ? 'bg-stone-700 cursor-wait'
               : 'bg-stone-800 hover:bg-stone-900 text-white active:scale-[0.98] disabled:opacity-30'
           }`}
         >
           {isSubmitting ? (
              <span className="animate-pulse">Sipariş Gönderiliyor...</span>
-          ) : orderPlaced ? (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Siparişiniz Alındı!
-            </>
           ) : (
             'Barista\'ya Sipariş Ver'
           )}

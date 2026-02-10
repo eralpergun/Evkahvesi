@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState(false);
 
   // Auth durumunu dinle
   useEffect(() => {
@@ -52,7 +53,8 @@ const App: React.FC = () => {
     const ordersRef = ref(db, 'orders');
     
     const unsubscribe = onValue(ordersRef, (snapshot) => {
-      setDbError(null); // Başarılı okumada hatayı temizle
+      setDbError(null); 
+      setPermissionError(false);
       const data = snapshot.val();
       if (data) {
         const ordersArray = Object.entries(data).map(([key, value]) => {
@@ -67,10 +69,11 @@ const App: React.FC = () => {
       }
     }, (error) => {
       console.error("Veri okuma hatası:", error);
-      if (error.code === 'PERMISSION_DENIED') {
-        setDbError("Erişim Reddedildi: Lütfen Firebase Konsolundan Realtime Database kurallarını (Rules) kontrol edin. '.read' ve '.write' kurallarını 'auth != null' veya test için 'true' yapın.");
+      if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
+        setPermissionError(true);
+        setDbError("Erişim Reddedildi: Veritabanı kuralları (Rules) yapılandırılmamış.");
       } else {
-        setDbError(`Bağlantı Hatası: ${error.message}. databaseURL yapılandırmanızı kontrol edin.`);
+        setDbError(`Bağlantı Hatası: ${error.message}. Lütfen services/firebase.ts dosyasındaki databaseURL ayarını kontrol edin.`);
       }
     });
 
@@ -82,15 +85,35 @@ const App: React.FC = () => {
       const ordersRef = ref(db, 'orders');
       const newOrderRef = push(ordersRef);
       
-      await set(newOrderRef, {
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Zaman Aşımı")), 10000)
+      );
+
+      const savePromise = set(newOrderRef, {
         ...orderData,
         timestamp: Date.now(),
         status: 'PENDING'
       });
-      return true; // Başarılı
+
+      await Promise.race([savePromise, timeoutPromise]);
+      
+      return newOrderRef.key; // Return the ID so GuestDashboard can track it
     } catch (error: any) {
       console.error("Sipariş hatası:", error);
-      alert("Sipariş gönderilemedi: " + error.message + "\nLütfen internet bağlantınızı veya veritabanı kurallarınızı kontrol edin.");
+      
+      let errorMessage = "Sipariş gönderilemedi.";
+      if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
+        setPermissionError(true);
+        errorMessage = "Yetki Hatası: Veritabanı kuralları yazmaya izin vermiyor.";
+      } else if (error.message === "Zaman Aşımı") {
+        errorMessage = "Veritabanına ulaşılamadı. İnternet bağlantınızı kontrol edin.";
+      } else {
+        errorMessage += " " + error.message;
+      }
+      
+      if (!permissionError && error.code !== 'PERMISSION_DENIED' && !error.message.includes('permission_denied')) {
+          alert(errorMessage);
+      }
       throw error;
     }
   };
@@ -99,8 +122,13 @@ const App: React.FC = () => {
     try {
       const orderRef = ref(db, `orders/${id}`);
       await update(orderRef, { status });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Güncelleme hatası:", error);
+      if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
+         setPermissionError(true);
+      } else {
+         alert("Durum güncellenemedi: " + error.message);
+      }
     }
   };
 
@@ -108,8 +136,11 @@ const App: React.FC = () => {
     try {
       const orderRef = ref(db, `orders/${id}`);
       await remove(orderRef);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Silme hatası:", error);
+      if (error.code === 'PERMISSION_DENIED' || error.message.includes('permission_denied')) {
+         setPermissionError(true);
+      }
     }
   };
 
@@ -122,6 +153,60 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fcfaf7]">
         <div className="animate-pulse text-stone-400 font-serif">Yükleniyor...</div>
+      </div>
+    );
+  }
+
+  // Permission Error Modal
+  if (permissionError) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-stone-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border-4 border-red-100">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center shrink-0">
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+               </svg>
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-serif text-stone-900">Veritabanı Kuralları Eksik</h2>
+              <p className="text-stone-600">
+                Uygulama veritabanına bağlandı ancak <strong>yazma/okuma izni alamadı</strong>. <br/>
+                Bu hatayı düzeltmek için Firebase Konsolu'nda şu adımları izleyin:
+              </p>
+              
+              <ol className="list-decimal list-inside text-sm text-stone-600 space-y-1 ml-1">
+                <li>Firebase Konsolu &gt; <strong>Realtime Database</strong> sekmesine gidin.</li>
+                <li>Yukarıdaki <strong>Rules (Kurallar)</strong> sekmesine tıklayın.</li>
+                <li>Mevcut kodları silin ve aşağıdakini yapıştırın:</li>
+              </ol>
+
+              <div className="bg-stone-900 rounded-xl p-4 relative group text-left">
+                <code className="text-green-400 font-mono text-sm whitespace-pre block">
+{`{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}`}
+                </code>
+              </div>
+
+              <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <p className="text-orange-800 text-xs font-bold">
+                  İPUCU: "Publish" (Yayınla) butonuna basmayı unutmayın.
+                </p>
+              </div>
+
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full py-4 bg-stone-800 hover:bg-stone-900 text-white rounded-xl font-bold transition-all mt-2"
+              >
+                Kuralları Güncelledim, Yeniden Dene
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -142,7 +227,7 @@ const App: React.FC = () => {
       )}
       
       {role === UserRole.GUEST ? (
-        <GuestDashboard onPlaceOrder={handlePlaceOrder} />
+        <GuestDashboard orders={orders} onPlaceOrder={handlePlaceOrder} />
       ) : (
         <AdminDashboard 
           orders={orders} 

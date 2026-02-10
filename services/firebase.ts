@@ -6,14 +6,26 @@ import { getAuth } from "firebase/auth";
 // @ts-ignore
 import { getAnalytics, isSupported } from "firebase/analytics";
 
+// HATA AYIKLAMA NOTU:
+// Eğer "Veritabanına ulaşılamadı (Zaman Aşımı)" hatası alıyorsanız:
+// 1. Firebase Konsolu'nda "Realtime Database" oluşturduğunuzdan emin olun.
+// 2. Oluştururken "Konum" (Location) olarak ne seçtiğinize bakın.
+//    - "United States" seçtiyseniz -> SEÇENEK 1'i kullanın.
+//    - "Belgium" (Europe) seçtiyseniz -> SEÇENEK 2'yi kullanın.
+// 3. Aşağıdaki 'firebaseConfig' nesnesini, Firebase Konsolu > Proje Ayarları kısmındaki
+//    kendi proje ayarlarınızla DEĞİŞTİRMENİZ GEREKMEKTEDİR.
+
 const firebaseConfig = {
   apiKey: "AIzaSyDP-nSV9h2rm8L0HpgqbkuwRGEAINS-eds",
   authDomain: "evkahve.firebaseapp.com",
-  // ÖNEMLİ: Realtime Database URL'i eklenmeli.
-  // Varsayılan (US-Central1): https://evkahve-default-rtdb.firebaseio.com
-  // Eğer Avrupa (Belçika) seçtiyseniz: https://evkahve-default-rtdb.europe-west1.firebasedatabase.app
-  // Lütfen Firebase konsolundan Realtime Database başlığındaki URL ile burayı kontrol edin.
-  databaseURL: "https://evkahve-default-rtdb.firebaseio.com",
+  
+  // SEÇENEK 1: Varsayılan (ABD Sunucusu)
+  // databaseURL: "https://evkahve-default-rtdb.firebaseio.com",
+  
+  // SEÇENEK 2: Avrupa Sunucusu (Türkiye için genellikle bu veya us-central1 seçilir)
+  // ŞU AN AKTİF OLAN BU:
+  databaseURL: "https://evkahve-default-rtdb.europe-west1.firebasedatabase.app",
+
   projectId: "evkahve",
   storageBucket: "evkahve.firebasestorage.app",
   messagingSenderId: "1054934114759",
