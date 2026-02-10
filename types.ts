@@ -11,7 +11,7 @@ export enum CoffeeSize {
   LARGE = 'Large'
 }
 
-export type CoffeeType = 'Latte Macchiato' | 'Americano' | 'Espresso' | 'Caramel Macchiato' | 'Iced Latte Macchiato' | 'Iced Caramel Macchiato';
+export type CoffeeType = 'Latte Macchiato' | 'Americano' | 'Espresso' | 'Caramel Macchiato' | 'Iced Latte Macchiato' | 'Iced Caramel Macchiato' | 'Cafe Crema';
 
 export interface Order {
   id: string;

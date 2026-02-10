@@ -9,6 +9,12 @@ export const COFFEE_OPTIONS: CoffeeOption[] = [
     image: 'https://images.unsplash.com/photo-1599398054066-846f28917f38?auto=format&fit=crop&q=80&w=600'
   },
   {
+    id: 'Cafe Crema',
+    name: 'Cafe Crema',
+    description: 'Espresso bazlı, üzerinde ipeksi bir krema tabakası bulunan uzun içimli klasik.',
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=600'
+  },
+  {
     id: 'Americano',
     name: 'Americano',
     description: 'Sıcak su ile yumuşatılmış yoğun espresso çekimleri.',

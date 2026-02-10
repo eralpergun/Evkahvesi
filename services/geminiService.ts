@@ -13,7 +13,7 @@ export const getBaristaSuggestion = async (mood: string): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Kullanıcı şu an böyle hissediyor: ${mood}. Dünya standartlarında bir barista olarak, menümüzdeki kahvelerden birini (Latte Macchiato, Americano, Espresso veya Karamel Macchiato) öner ve neden bu moduna uygun olduğuna dair Türkçe, şiirsel tek bir cümle yaz. Sadece öneriyi ve sebebi döndür.`,
+      contents: `Kullanıcı şu an böyle hissediyor: ${mood}. Dünya standartlarında bir barista olarak, menümüzdeki kahvelerden birini (Latte Macchiato, Americano, Espresso, Cafe Crema veya Karamel Macchiato) öner ve neden bu moduna uygun olduğuna dair Türkçe, şiirsel tek bir cümle yaz. Sadece öneriyi ve sebebi döndür.`,
     });
     return response.text || "Güne enerjik başlamanız için bir Espresso öneririm!";
   } catch (error) {

@@ -1,25 +1,31 @@
-
+// @ts-ignore
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth";
+// @ts-ignore
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA0BL_jivW7DP1jZfNT_gFnRM3IgPgnWx8",
-  authDomain: "evcoffeetr.firebaseapp.com",
-  projectId: "evcoffeetr",
-  storageBucket: "evcoffeetr.firebasestorage.app",
-  messagingSenderId: "421092198821",
-  appId: "1:421092198821:web:17d840eaadb1a9c69a004c",
-  measurementId: "G-GR9RWVJV1D"
+  apiKey: "AIzaSyDP-nSV9h2rm8L0HpgqbkuwRGEAINS-eds",
+  authDomain: "evkahve.firebaseapp.com",
+  // Realtime Database URL'i proje ID'sine göre varsayılan olarak ayarlandı.
+  // Eğer veritabanınız farklı bir bölgedeyse, Firebase konsolundan doğru URL'i alıp buraya yapıştırın.
+  databaseURL: "https://evkahve-default-rtdb.firebaseio.com",
+  projectId: "evkahve",
+  storageBucket: "evkahve.firebasestorage.app",
+  messagingSenderId: "1054934114759",
+  appId: "1:1054934114759:web:5164eda67b7009f6f6b9e2",
+  measurementId: "G-M2T17DVS2H"
 };
 
 // Firebase Uygulamasını Başlat
 const app = initializeApp(firebaseConfig);
 
-// Firestore Veritabanı Servisini Dışa Aktar
-export const db = getFirestore(app);
+// Servisleri Dışa Aktar
+export const db = getDatabase(app);
+export const auth = getAuth(app);
 
-// Analytics'i yalnızca desteklenen tarayıcı ortamlarında başlat
+// Analytics'i desteklenen ortamlarda başlat
 isSupported().then(supported => {
   if (supported) {
     getAnalytics(app);
