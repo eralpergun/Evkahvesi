@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { COFFEE_OPTIONS, SIZES, SIZE_LABELS } from '../constants';
-import { CoffeeType, CoffeeSize, Order } from '../types';
+import { CoffeeType, CoffeeSize, Order, MilkLevel } from '../types';
 
 interface GuestDashboardProps {
-  orders: Order[]; // Tüm siparişleri al ki durumu takip edebilelim
+  orders: Order[];
   onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<string | null>;
   isServiceOnline: boolean;
 }
@@ -14,6 +14,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
   const [selectedCoffee, setSelectedCoffee] = useState<CoffeeType | null>(null);
   const [size, setSize] = useState<CoffeeSize>(CoffeeSize.MEDIUM);
   const [percentage, setPercentage] = useState(50);
+  const [milkLevel, setMilkLevel] = useState<MilkLevel>('Standart');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [trackedOrderId, setTrackedOrderId] = useState<string | null>(null);
 
@@ -22,6 +23,11 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
     if (!trackedOrderId) return null;
     return orders.find(o => o.id === trackedOrderId) || null;
   }, [orders, trackedOrderId]);
+
+  // Seçilen kahve detayını bul
+  const selectedCoffeeDetails = useMemo(() => {
+    return COFFEE_OPTIONS.find(c => c.id === selectedCoffee);
+  }, [selectedCoffee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +39,19 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
         guestName: name,
         coffeeType: selectedCoffee,
         size,
-        percentage
+        percentage,
+        // Sadece sütlü kahveyse süt oranını gönder, değilse undefined
+        milkLevel: selectedCoffeeDetails?.isMilky ? milkLevel : undefined
       });
 
       if (orderId) {
         setTrackedOrderId(orderId);
       }
       
-      // Formu temizle ama isim kalsın (bir sonraki sipariş için kolaylık)
+      // Formu temizle ama isim kalsın
       setSelectedCoffee(null);
+      setMilkLevel('Standart');
+      setPercentage(50);
       
     } catch (error) {
       // Hata App.tsx'te handle ediliyor
@@ -55,7 +65,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
     setSelectedCoffee(null);
   };
 
-  // 1. EĞER SERVİS KAPALIYSA ve AKTİF SİPARİŞ YOKSA -> SERVİS KAPALI EKRANI
+  // 1. SERVİS KAPALI EKRANI
   if (!isServiceOnline && !trackedOrder) {
       return (
         <div className="max-w-2xl mx-auto py-16 animate-fade-in text-center px-6">
@@ -70,7 +80,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
       );
   }
 
-  // 2. EĞER SİPARİŞ TAKİBİ VARSA (Servis kapalı olsa bile kendi siparişini görebilmeli) -> DURUM EKRANI
+  // 2. DURUM EKRANI
   if (trackedOrder) {
     const isCompleted = trackedOrder.status === 'COMPLETED';
     const isPreparing = trackedOrder.status === 'PREPARING';
@@ -80,7 +90,6 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
       <div className="max-w-2xl mx-auto py-10 animate-fade-in">
         <div className="bg-white rounded-[2.5rem] shadow-xl border border-stone-100 overflow-hidden relative">
           
-          {/* Durum Başlığı */}
           <div className={`p-10 text-center transition-colors duration-500 ${
             isCompleted ? 'bg-stone-800 text-white' : 
             isPreparing ? 'bg-orange-50 text-stone-800' : 
@@ -101,7 +110,6 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
             </p>
           </div>
 
-          {/* İlerleme Çubuğu */}
           <div className="px-10 py-8">
             <div className="flex justify-between text-[10px] font-black uppercase tracking-[0.2em] text-stone-300 mb-4">
               <span className={isPending || isPreparing || isCompleted ? 'text-stone-800' : ''}>Sırada</span>
@@ -118,7 +126,6 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
             </div>
           </div>
 
-          {/* Sipariş Detayı */}
           <div className="px-10 pb-10">
             <div className="bg-stone-50 rounded-2xl p-6 border border-stone-100 flex items-center gap-4">
               <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm">
@@ -128,6 +135,11 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
                 <div className="text-lg font-serif font-bold text-stone-800">{trackedOrder.coffeeType}</div>
                 <div className="text-xs text-stone-500 font-medium">
                   {SIZE_LABELS[trackedOrder.size]} • %{trackedOrder.percentage} Sertlik
+                  {trackedOrder.milkLevel && (
+                    <span className="block mt-1 text-stone-400 font-bold uppercase text-[10px]">
+                      {trackedOrder.milkLevel}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -146,7 +158,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
                      Servis kapandığı için yeni sipariş verilemez.
                  </p>
             )}
-
+            
             {!isCompleted && (
                <p className="text-center mt-8 text-xs text-stone-400 italic">
                  Ekran otomatik güncellenecektir...
@@ -158,7 +170,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
     );
   }
 
-  // 3. NORMAL SİPARİŞ FORMU
+  // 3. SİPARİŞ FORMU
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-10 text-center">
@@ -191,24 +203,35 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
             {COFFEE_OPTIONS.map((coffee) => (
               <div 
                 key={coffee.id}
-                onClick={() => setSelectedCoffee(coffee.id)}
-                className={`cursor-pointer group relative rounded-3xl overflow-hidden border-2 transition-all duration-300 ${
+                onClick={() => !coffee.isComingSoon && setSelectedCoffee(coffee.id)}
+                className={`group relative rounded-3xl overflow-hidden border-2 transition-all duration-300 ${
+                  coffee.isComingSoon ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+                } ${
                   selectedCoffee === coffee.id ? 'border-stone-800 ring-8 ring-stone-50 scale-[1.02]' : 'border-stone-50 hover:border-stone-200'
                 }`}
               >
-                <div className="h-48 overflow-hidden">
+                <div className="h-48 overflow-hidden relative">
                   <img 
                     src={coffee.image} 
                     alt={coffee.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    className={`w-full h-full object-cover transition-transform duration-700 ${coffee.isComingSoon ? 'grayscale-[0.5]' : 'group-hover:scale-110'}`} 
                   />
+                  
+                  {/* Yakında Gelecek Overlay */}
+                  {coffee.isComingSoon && (
+                    <div className="absolute inset-0 bg-stone-900/60 z-10 flex items-center justify-center backdrop-blur-[2px]">
+                      <span className="bg-white/95 text-stone-900 px-4 py-2 font-black text-xs uppercase tracking-widest rounded-lg transform -rotate-6 shadow-xl border border-stone-200">
+                        Yakında Gelecek
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="p-5 bg-white">
-                  <h4 className="font-bold text-stone-800 text-lg">{coffee.name}</h4>
+                <div className="p-5 bg-white relative">
+                  <h4 className={`font-bold text-lg ${coffee.isComingSoon ? 'text-stone-400' : 'text-stone-800'}`}>{coffee.name}</h4>
                   <p className="text-xs text-stone-400 mt-1 leading-relaxed">{coffee.description}</p>
                 </div>
                 {selectedCoffee === coffee.id && (
-                  <div className="absolute top-4 right-4 bg-stone-800 text-white rounded-full p-2 shadow-lg">
+                  <div className="absolute top-4 right-4 bg-stone-800 text-white rounded-full p-2 shadow-lg z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
@@ -242,25 +265,53 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
                 ))}
               </div>
             </div>
-            <div>
-              <div className="flex justify-between mb-4">
-                <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Kahve Sertliği</label>
-                <span className="text-xs font-black text-stone-800">%{percentage}</span>
+            
+            <div className="space-y-8">
+              {/* Sertlik Ayarı */}
+              <div>
+                <div className="flex justify-between mb-4">
+                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Kahve Sertliği</label>
+                  <span className="text-xs font-black text-stone-800">%{percentage}</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="5"
+                  className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-stone-800"
+                  value={percentage}
+                  onChange={(e) => setPercentage(parseInt(e.target.value))}
+                />
+                <div className="flex justify-between mt-3 text-[9px] text-stone-300 font-black uppercase tracking-widest">
+                  <span>Hafif</span>
+                  <span>Dengeli</span>
+                  <span>Sert</span>
+                </div>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                step="5"
-                className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-stone-800"
-                value={percentage}
-                onChange={(e) => setPercentage(parseInt(e.target.value))}
-              />
-              <div className="flex justify-between mt-3 text-[9px] text-stone-300 font-black uppercase tracking-widest">
-                <span>Hafif</span>
-                <span>Dengeli</span>
-                <span>Sert</span>
-              </div>
+
+              {/* Süt Oranı - Sadece Sütlü Kahveler İçin */}
+              {selectedCoffeeDetails?.isMilky && (
+                 <div className="animate-fade-in">
+                    <label className="block text-[10px] font-black text-stone-400 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
+                       Süt Oranı
+                       <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[8px]">ÖZEL</span>
+                    </label>
+                    <div className="flex gap-3">
+                      {(['Az Sütlü', 'Standart', 'Bol Sütlü'] as MilkLevel[]).map(level => (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => setMilkLevel(level)}
+                          className={`flex-1 py-3 rounded-2xl font-bold text-xs transition-all ${
+                            milkLevel === level ? 'bg-stone-800 text-white shadow-lg' : 'bg-stone-50 text-stone-400 hover:bg-stone-100'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+              )}
             </div>
           </div>
         </section>

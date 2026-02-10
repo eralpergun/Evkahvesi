@@ -122,7 +122,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <tr className="bg-stone-50/50 text-[10px] text-stone-400 font-black uppercase tracking-[0.15em] border-b border-stone-100">
                   <th className="px-8 py-5">Misafir</th>
                   <th className="px-8 py-5">Seçim</th>
-                  <th className="px-8 py-5">Sertlik</th>
+                  <th className="px-8 py-5">Sertlik / Süt</th>
                   <th className="px-8 py-5">Durum</th>
                   <th className="px-8 py-5 text-right">İşlemler</th>
                 </tr>
@@ -150,11 +150,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <div className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter mt-1">{SIZE_LABELS[order.size]}</div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-stone-100 h-1.5 rounded-full w-24 overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-700 ${order.status === 'COMPLETED' ? 'bg-stone-300' : 'bg-stone-800'}`} style={{ width: `${order.percentage}%` }}></div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-stone-100 h-1.5 rounded-full w-24 overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${order.status === 'COMPLETED' ? 'bg-stone-300' : 'bg-stone-800'}`} style={{ width: `${order.percentage}%` }}></div>
+                            </div>
+                            <span className="text-[10px] font-black text-stone-500">%{order.percentage}</span>
                         </div>
-                        <span className="text-[10px] font-black text-stone-500">%{order.percentage}</span>
+                        {order.milkLevel && (
+                             <span className="inline-block self-start px-2 py-1 bg-orange-50 text-orange-800 rounded-md text-[9px] font-bold uppercase tracking-wide border border-orange-100">
+                                {order.milkLevel}
+                             </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6">
