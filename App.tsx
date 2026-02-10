@@ -22,12 +22,30 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState(false);
+  const [isServiceOnline, setIsServiceOnline] = useState(true); // Varsayılan açık
 
-  // Auth durumunu dinle
+  // Auth durumunu ve Oturum Süresini (2 Gün) dinle
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        // Oturum süresi kontrolü (2 Gün = 48 saat)
+        const loginTimeStr = localStorage.getItem('evCoffeeLoginTime');
         const storedRole = localStorage.getItem('evCoffeeRole');
+        
+        // Eğer yönetici ise ve süre dolmuşsa at
+        if (storedRole === UserRole.ADMIN && loginTimeStr) {
+          const loginTime = parseInt(loginTimeStr, 10);
+          const twoDaysInMs = 48 * 60 * 60 * 1000;
+          const now = Date.now();
+
+          if (now - loginTime > twoDaysInMs) {
+            // Süre dolmuş
+            handleLogout();
+            setLoading(false);
+            return;
+          }
+        }
+
         if (storedRole === UserRole.ADMIN) {
           setRole(UserRole.ADMIN);
         } else {
@@ -36,6 +54,7 @@ const App: React.FC = () => {
       } else {
         setRole(UserRole.NONE);
         localStorage.removeItem('evCoffeeRole');
+        localStorage.removeItem('evCoffeeLoginTime');
       }
       setLoading(false);
     });
@@ -43,16 +62,16 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Firebase Realtime Database'den verileri dinle
+  // Firebase Realtime Database'den verileri ve sistem durumunu dinle
   useEffect(() => {
     if (role === UserRole.NONE) {
       setOrders([]);
       return;
     }
 
+    // 1. Siparişleri Dinle
     const ordersRef = ref(db, 'orders');
-    
-    const unsubscribe = onValue(ordersRef, (snapshot) => {
+    const unsubscribeOrders = onValue(ordersRef, (snapshot) => {
       setDbError(null); 
       setPermissionError(false);
       const data = snapshot.val();
@@ -77,11 +96,26 @@ const App: React.FC = () => {
       }
     });
 
-    return () => unsubscribe();
+    // 2. Sistem Durumunu (Servis Açık/Kapalı) Dinle
+    const systemRef = ref(db, 'system/isOnline');
+    const unsubscribeSystem = onValue(systemRef, (snapshot) => {
+      const val = snapshot.val();
+      // Eğer veritabanında kayıt yoksa varsayılan true kabul et
+      setIsServiceOnline(val === null ? true : val);
+    });
+
+    return () => {
+      unsubscribeOrders();
+      unsubscribeSystem();
+    };
   }, [role]);
 
   const handlePlaceOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'status'>) => {
     try {
+      if (!isServiceOnline) {
+        throw new Error("Servis şu anda kapalıdır.");
+      }
+
       const ordersRef = ref(db, 'orders');
       const newOrderRef = push(ordersRef);
       
@@ -97,7 +131,7 @@ const App: React.FC = () => {
 
       await Promise.race([savePromise, timeoutPromise]);
       
-      return newOrderRef.key; // Return the ID so GuestDashboard can track it
+      return newOrderRef.key; 
     } catch (error: any) {
       console.error("Sipariş hatası:", error);
       
@@ -144,8 +178,17 @@ const App: React.FC = () => {
     }
   };
 
+  const handleToggleService = async (newStatus: boolean) => {
+    try {
+      await set(ref(db, 'system/isOnline'), newStatus);
+    } catch (error: any) {
+      alert("Durum değiştirilemedi: " + error.message);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('evCoffeeRole');
+    localStorage.removeItem('evCoffeeLoginTime');
     signOut(auth).catch(err => console.error("Çıkış hatası:", err));
   };
 
@@ -227,12 +270,18 @@ const App: React.FC = () => {
       )}
       
       {role === UserRole.GUEST ? (
-        <GuestDashboard orders={orders} onPlaceOrder={handlePlaceOrder} />
+        <GuestDashboard 
+          orders={orders} 
+          onPlaceOrder={handlePlaceOrder} 
+          isServiceOnline={isServiceOnline}
+        />
       ) : (
         <AdminDashboard 
           orders={orders} 
           onUpdateStatus={handleUpdateStatus} 
-          onClearOrder={handleClearOrder} 
+          onClearOrder={handleClearOrder}
+          isServiceOnline={isServiceOnline}
+          onToggleService={handleToggleService}
         />
       )}
     </Layout>

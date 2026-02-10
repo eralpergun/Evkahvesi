@@ -7,9 +7,17 @@ interface AdminDashboardProps {
   orders: Order[];
   onUpdateStatus: (id: string, status: Order['status']) => void;
   onClearOrder: (id: string) => void;
+  isServiceOnline: boolean;
+  onToggleService: (status: boolean) => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus, onClearOrder }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
+    orders, 
+    onUpdateStatus, 
+    onClearOrder, 
+    isServiceOnline, 
+    onToggleService 
+}) => {
   const [lastOrderCount, setLastOrderCount] = useState(orders.length);
   const [newOrderToast, setNewOrderToast] = useState<{ name: string; type: string } | null>(null);
   
@@ -46,6 +54,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
         </div>
       )}
 
+      {/* Kontrol Paneli Üst Bar */}
+      <div className="flex flex-col md:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
+         <div className="flex-1">
+             <h2 className="text-2xl font-serif text-stone-800">Servis Durumu</h2>
+             <p className="text-stone-400 text-sm">Misafirler sipariş verebilsin mi?</p>
+         </div>
+         <div className="flex items-center gap-4">
+             <span className={`text-xs font-bold uppercase tracking-widest ${isServiceOnline ? 'text-green-600' : 'text-stone-400'}`}>
+                 {isServiceOnline ? 'SERVİS AÇIK' : 'SERVİS KAPALI'}
+             </span>
+             <button 
+                onClick={() => onToggleService(!isServiceOnline)}
+                className={`w-16 h-8 rounded-full p-1 transition-all duration-300 ${isServiceOnline ? 'bg-green-500' : 'bg-stone-200'}`}
+             >
+                 <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-all duration-300 ${isServiceOnline ? 'translate-x-8' : 'translate-x-0'}`} />
+             </button>
+         </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
           <div className="text-stone-400 text-[9px] font-black uppercase tracking-widest mb-1">Toplam Kuyruk</div>
@@ -72,8 +99,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ orders, onUpdateStatus,
             <p className="text-xs text-stone-400 mt-1 font-medium italic">Gerçek zamanlı talepler izleniyor.</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Canlı Bağlantı</span>
+            <span className={`w-2 h-2 rounded-full animate-pulse ${isServiceOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                {isServiceOnline ? 'Canlı Bağlantı' : 'Çevrimdışı'}
+            </span>
           </div>
         </div>
 

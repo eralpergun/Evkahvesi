@@ -6,9 +6,10 @@ import { CoffeeType, CoffeeSize, Order } from '../types';
 interface GuestDashboardProps {
   orders: Order[]; // Tüm siparişleri al ki durumu takip edebilelim
   onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<string | null>;
+  isServiceOnline: boolean;
 }
 
-const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder }) => {
+const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, isServiceOnline }) => {
   const [name, setName] = useState('');
   const [selectedCoffee, setSelectedCoffee] = useState<CoffeeType | null>(null);
   const [size, setSize] = useState<CoffeeSize>(CoffeeSize.MEDIUM);
@@ -54,7 +55,22 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder })
     setSelectedCoffee(null);
   };
 
-  // Eğer aktif bir sipariş takip ediliyorsa, Durum Ekranını göster
+  // 1. EĞER SERVİS KAPALIYSA ve AKTİF SİPARİŞ YOKSA -> SERVİS KAPALI EKRANI
+  if (!isServiceOnline && !trackedOrder) {
+      return (
+        <div className="max-w-2xl mx-auto py-16 animate-fade-in text-center px-6">
+             <div className="w-24 h-24 bg-stone-200 rounded-full flex items-center justify-center mx-auto text-stone-400 mb-8">
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+            </div>
+            <h2 className="text-4xl font-serif text-stone-800 mb-4">Servisimiz Kapalıdır</h2>
+            <p className="text-stone-500 text-lg">Şu anda kahve servisi yapılmamaktadır. <br/>Daha sonra tekrar bekleriz.</p>
+        </div>
+      );
+  }
+
+  // 2. EĞER SİPARİŞ TAKİBİ VARSA (Servis kapalı olsa bile kendi siparişini görebilmeli) -> DURUM EKRANI
   if (trackedOrder) {
     const isCompleted = trackedOrder.status === 'COMPLETED';
     const isPreparing = trackedOrder.status === 'PREPARING';
@@ -116,13 +132,19 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder })
               </div>
             </div>
 
-            {isCompleted && (
+            {isCompleted && isServiceOnline && (
               <button 
                 onClick={handleNewOrder}
                 className="w-full mt-8 py-5 bg-stone-800 text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-stone-900 transition-all shadow-lg active:scale-[0.98]"
               >
                 Yeni Sipariş Ver
               </button>
+            )}
+
+            {isCompleted && !isServiceOnline && (
+                 <p className="mt-8 text-center text-red-500 font-bold text-sm">
+                     Servis kapandığı için yeni sipariş verilemez.
+                 </p>
             )}
 
             {!isCompleted && (
@@ -136,7 +158,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder })
     );
   }
 
-  // Sipariş formu (Mevcut Görünüm)
+  // 3. NORMAL SİPARİŞ FORMU
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-10 text-center">
