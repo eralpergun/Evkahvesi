@@ -4,7 +4,7 @@ import { COFFEE_OPTIONS, SIZES, SIZE_LABELS } from '../constants';
 import { CoffeeType, CoffeeSize, Order } from '../types';
 
 interface GuestDashboardProps {
-  onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => void;
+  onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<boolean>;
 }
 
 const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
@@ -13,24 +13,34 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
   const [size, setSize] = useState<CoffeeSize>(CoffeeSize.MEDIUM);
   const [percentage, setPercentage] = useState(50);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !selectedCoffee) return;
+    if (!name || !selectedCoffee || isSubmitting) return;
     
-    onPlaceOrder({
-      guestName: name,
-      coffeeType: selectedCoffee,
-      size,
-      percentage
-    });
+    setIsSubmitting(true);
+    try {
+      await onPlaceOrder({
+        guestName: name,
+        coffeeType: selectedCoffee,
+        size,
+        percentage
+      });
 
-    setOrderPlaced(true);
-    setTimeout(() => setOrderPlaced(false), 3000);
-    
-    setTimeout(() => {
-      setSelectedCoffee(null);
-    }, 500);
+      // Sadece işlem başarılı olursa buraya gelir
+      setOrderPlaced(true);
+      setTimeout(() => setOrderPlaced(false), 3000);
+      
+      setTimeout(() => {
+        setSelectedCoffee(null);
+      }, 500);
+    } catch (error) {
+      // Hata durumunda App.tsx zaten alert gösterir, burada ekstra bir şey yapmaya gerek yok
+      // ama isSubmitting'i false yapmalıyız
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -141,14 +151,16 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ onPlaceOrder }) => {
 
         <button 
           type="submit"
-          disabled={!name || !selectedCoffee || orderPlaced}
+          disabled={!name || !selectedCoffee || orderPlaced || isSubmitting}
           className={`w-full py-6 rounded-3xl text-xl font-bold shadow-2xl transition-all flex items-center justify-center gap-3 ${
             orderPlaced 
               ? 'bg-green-500 text-white cursor-default'
               : 'bg-stone-800 hover:bg-stone-900 text-white active:scale-[0.98] disabled:opacity-30'
           }`}
         >
-          {orderPlaced ? (
+          {isSubmitting ? (
+             <span className="animate-pulse">Sipariş Gönderiliyor...</span>
+          ) : orderPlaced ? (
             <>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

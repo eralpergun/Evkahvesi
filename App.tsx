@@ -20,27 +20,20 @@ const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.NONE);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   // Auth durumunu dinle
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Kullanıcı giriş yapmış.
-        // Hem Misafir hem Admin artık Anonim giriş kullanıyor.
-        // Rolü belirlemek için localStorage'a bakıyoruz.
         const storedRole = localStorage.getItem('evCoffeeRole');
-        
         if (storedRole === UserRole.ADMIN) {
           setRole(UserRole.ADMIN);
         } else {
-          // Varsayılan olarak Guest
           setRole(UserRole.GUEST);
         }
       } else {
-        // Kullanıcı çıkış yapmış
         setRole(UserRole.NONE);
-        // Çıkış yapıldığında tercihi temizlemiyoruz, bir sonraki girişte Login.tsx zaten üzerine yazacak.
-        // Ancak temiz bir state için temizleyebiliriz de.
         localStorage.removeItem('evCoffeeRole');
       }
       setLoading(false);
@@ -51,7 +44,6 @@ const App: React.FC = () => {
 
   // Firebase Realtime Database'den verileri dinle
   useEffect(() => {
-    // Sadece giriş yapılmışsa veri çek
     if (role === UserRole.NONE) {
       setOrders([]);
       return;
@@ -60,6 +52,7 @@ const App: React.FC = () => {
     const ordersRef = ref(db, 'orders');
     
     const unsubscribe = onValue(ordersRef, (snapshot) => {
+      setDbError(null); // Başarılı okumada hatayı temizle
       const data = snapshot.val();
       if (data) {
         const ordersArray = Object.entries(data).map(([key, value]) => {
@@ -75,7 +68,9 @@ const App: React.FC = () => {
     }, (error) => {
       console.error("Veri okuma hatası:", error);
       if (error.code === 'PERMISSION_DENIED') {
-        // İzin hatası
+        setDbError("Erişim Reddedildi: Lütfen Firebase Konsolundan Realtime Database kurallarını (Rules) kontrol edin. '.read' ve '.write' kurallarını 'auth != null' veya test için 'true' yapın.");
+      } else {
+        setDbError(`Bağlantı Hatası: ${error.message}. databaseURL yapılandırmanızı kontrol edin.`);
       }
     });
 
@@ -92,9 +87,11 @@ const App: React.FC = () => {
         timestamp: Date.now(),
         status: 'PENDING'
       });
+      return true; // Başarılı
     } catch (error: any) {
       console.error("Sipariş hatası:", error);
-      alert("Sipariş gönderilemedi. Lütfen bağlantınızı kontrol edin.");
+      alert("Sipariş gönderilemedi: " + error.message + "\nLütfen internet bağlantınızı veya veritabanı kurallarınızı kontrol edin.");
+      throw error;
     }
   };
 
@@ -117,7 +114,6 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Çıkış yaparken storage'ı temizle
     localStorage.removeItem('evCoffeeRole');
     signOut(auth).catch(err => console.error("Çıkış hatası:", err));
   };
@@ -136,6 +132,15 @@ const App: React.FC = () => {
 
   return (
     <Layout role={role} onLogout={handleLogout}>
+      {dbError && role === UserRole.ADMIN && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-bold flex items-center gap-3">
+           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+           {dbError}
+        </div>
+      )}
+      
       {role === UserRole.GUEST ? (
         <GuestDashboard onPlaceOrder={handlePlaceOrder} />
       ) : (

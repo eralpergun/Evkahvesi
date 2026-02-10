@@ -1,3 +1,4 @@
+
 // @ts-ignore
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
@@ -8,8 +9,10 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 const firebaseConfig = {
   apiKey: "AIzaSyDP-nSV9h2rm8L0HpgqbkuwRGEAINS-eds",
   authDomain: "evkahve.firebaseapp.com",
-  // Realtime Database URL'i proje ID'sine göre varsayılan olarak ayarlandı.
-  // Eğer veritabanınız farklı bir bölgedeyse, Firebase konsolundan doğru URL'i alıp buraya yapıştırın.
+  // ÖNEMLİ: Realtime Database URL'i eklenmeli.
+  // Varsayılan (US-Central1): https://evkahve-default-rtdb.firebaseio.com
+  // Eğer Avrupa (Belçika) seçtiyseniz: https://evkahve-default-rtdb.europe-west1.firebasedatabase.app
+  // Lütfen Firebase konsolundan Realtime Database başlığındaki URL ile burayı kontrol edin.
   databaseURL: "https://evkahve-default-rtdb.firebaseio.com",
   projectId: "evkahve",
   storageBucket: "evkahve.firebasestorage.app",
