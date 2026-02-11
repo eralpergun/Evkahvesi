@@ -11,7 +11,19 @@ export enum CoffeeSize {
   LARGE = 'Large'
 }
 
-export type CoffeeType = 'Latte Macchiato' | 'Americano' | 'Espresso' | 'Caramel Macchiato' | 'Iced Latte Macchiato' | 'Iced Caramel Macchiato' | 'Cafe Crema' | 'Chefs Special';
+export type CoffeeType = 
+  | 'Latte Macchiato' 
+  | 'Caffe Latte'
+  | 'Flat White'
+  | 'Cappuccino' // Bu listede yoktu ama Caffe Latte vb ile genelde istenir, user istemediği için eklemiyorum.
+  | 'Americano' 
+  | 'Espresso' 
+  | 'Ristretto'
+  | 'Espresso Lungo'
+  | 'Caramel Macchiato' 
+  | 'Iced Latte Macchiato' 
+  | 'Iced Caramel Macchiato' 
+  | 'Cafe Crema';
 
 export type MilkLevel = 'Az Sütlü' | 'Standart' | 'Bol Sütlü';
 
