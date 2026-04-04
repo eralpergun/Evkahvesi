@@ -96,13 +96,18 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
     
     setIsSubmitting(true);
     try {
-      const orderId = await onPlaceOrder({
+      const orderPayload: Omit<Order, 'id' | 'timestamp' | 'status'> = {
         guestName: name,
         coffeeType: selectedCoffee,
         size,
         percentage,
-        milkLevel: selectedCoffeeDetails?.isMilky ? milkLevel : undefined
-      });
+      };
+      
+      if (selectedCoffeeDetails?.isMilky) {
+        orderPayload.milkLevel = milkLevel;
+      }
+
+      const orderId = await onPlaceOrder(orderPayload);
 
       if (orderId) {
         setMyOrderIds(prev => [orderId, ...prev]);
