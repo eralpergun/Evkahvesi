@@ -124,7 +124,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
   // --- RENDER: STATUS VIEW (Sipariş Listesi) ---
   if (viewMode === 'STATUS' && (myActiveOrders.length > 0 || !isServiceOnline)) {
     return (
-      <div className="max-w-3xl mx-auto py-2 md:py-6 animate-fade-in pb-24">
+      <div className="max-w-3xl mx-auto py-4 md:py-6 px-4 md:px-8 animate-fade-in pb-24">
         {/* Başlık Alanı */}
         <div className="text-center mb-6 md:mb-8">
           <h2 className="text-2xl md:text-3xl font-serif text-stone-800">Siparişleriniz</h2>
@@ -254,7 +254,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div className="max-w-4xl mx-auto pb-20 px-4 md:px-8 pt-4">
       
       {/* Üst Navigation */}
       <div className="flex justify-between items-center mb-6">
