@@ -6,12 +6,13 @@ import { CoffeeType, CoffeeSize, Order, MilkLevel } from '../types';
 interface GuestDashboardProps {
   orders: Order[];
   onPlaceOrder: (order: Omit<Order, 'id' | 'timestamp' | 'status'>) => Promise<string | null>;
+  onCancelOrder: (id: string) => Promise<void>;
   isServiceOnline: boolean;
 }
 
 type ViewMode = 'FORM' | 'STATUS';
 
-const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, isServiceOnline }) => {
+const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, onCancelOrder, isServiceOnline }) => {
   // LocalStorage'dan sipariş geçmişini al veya boş başlat
   const [myOrderIds, setMyOrderIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('evCoffee_myOrders');
@@ -186,6 +187,17 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, i
                                     />
                                 </div>
                             </div>
+
+                            {!isCompleted && (
+                                <div className="mt-5 flex justify-end">
+                                    <button 
+                                        onClick={() => onCancelOrder(order.id)}
+                                        className="text-[10px] md:text-xs font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-red-50"
+                                    >
+                                        Siparişi İptal Et
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );

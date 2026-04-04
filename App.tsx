@@ -273,6 +273,7 @@ const App: React.FC = () => {
         <GuestDashboard 
           orders={orders} 
           onPlaceOrder={handlePlaceOrder} 
+          onCancelOrder={handleClearOrder}
           isServiceOnline={isServiceOnline}
         />
       ) : (
