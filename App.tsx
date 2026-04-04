@@ -124,7 +124,7 @@ const App: React.FC = () => {
       );
 
       const savePromise = set(newOrderRef, {
-        ...orderData,
+        ...Object.fromEntries(Object.entries(orderData).filter(([_, v]) => v !== undefined)),
         timestamp: Date.now(),
         status: 'PENDING'
       });
