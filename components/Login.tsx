@@ -57,8 +57,8 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center p-4 md:p-6 bg-[#fcfaf7]">
       <div className="max-w-md w-full">
         <div className="text-center mb-10 md:mb-16">
-          <div className="w-16 h-16 md:w-20 md:h-20 bg-stone-800 rounded-2xl flex items-center justify-center text-white font-bold text-3xl md:text-4xl mx-auto shadow-2xl mb-6 md:mb-8 italic">E</div>
-          <h1 className="text-4xl md:text-5xl font-serif text-stone-800 mb-3 tracking-tighter">Ev Coffee</h1>
+          <img src="https://images.unsplash.com/vector-1775320416040-a411ec7444df?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwcm9maWxlLXBhZ2V8MXx8fGVufDB8fHx8fA%3D%3D" alt="Ergün Coffee Logo" className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover mx-auto shadow-2xl mb-6 md:mb-8" referrerPolicy="no-referrer" />
+          <h1 className="text-4xl md:text-5xl font-serif text-stone-800 mb-3 tracking-tighter">Ergün Coffee</h1>
           <p className="text-stone-400 font-medium italic text-sm">Evinizdeki kahve ritüeli.</p>
         </div>
 
@@ -143,7 +143,7 @@ const Login: React.FC = () => {
         </div>
 
         <p className="text-center mt-12 md:mt-20 text-stone-300 text-[9px] font-black uppercase tracking-[0.3em]">
-          Handcrafted by Ev Coffee &bull; v2.2
+          Handcrafted by Ergün Coffee &bull; v2.2
         </p>
       </div>
     </div>

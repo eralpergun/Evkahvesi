@@ -13,8 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
     <div className="min-h-screen flex flex-col">
       <header className="bg-white border-b border-orange-100 px-4 md:px-6 py-3 md:py-4 sticky top-0 z-50 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-stone-800 rounded-xl flex items-center justify-center text-white font-bold text-lg md:text-xl italic">E</div>
-          <h1 className="text-xl md:text-2xl font-serif text-stone-800">Ev Coffee</h1>
+          <img src="https://images.unsplash.com/vector-1775320416040-a411ec7444df?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwcm9maWxlLXBhZ2V8MXx8fGVufDB8fHx8fA%3D%3D" alt="Ergün Coffee Logo" className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover" referrerPolicy="no-referrer" />
+          <h1 className="text-xl md:text-2xl font-serif text-stone-800">Ergün Coffee</h1>
         </div>
         
         <div className="flex items-center gap-2 md:gap-4">
@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
       </main>
 
       <footer className="py-6 md:py-8 text-center text-stone-300 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold">
-        &copy; {new Date().getFullYear()} Ev Coffee Systems &bull; Her Bardakta Bir Hikaye
+        &copy; {new Date().getFullYear()} Ergün Coffee Systems &bull; Her Bardakta Bir Hikaye
       </footer>
     </div>
   );
