@@ -2,19 +2,7 @@
 {
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/googleb4f6380fc462631a.html",
-      "destination": "/googleb4f6380fc462631a.html"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|googleb4f6380fc462631a\\.html).*)",
       "destination": "/index.html"
     }
   ]
