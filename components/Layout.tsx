@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout }) => {
       </main>
 
       <footer className="py-6 md:py-8 text-center text-stone-300 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold">
-        &copy; {new Date().getFullYear()} Ergün Coffee Systems &bull; Her Bardakta Bir Hikaye
+        &copy; {new Date().getFullYear()} Ergün Coffee &bull; Her Bardakta Bir Hikaye
       </footer>
     </div>
   );

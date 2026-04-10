@@ -29,8 +29,8 @@ const App: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Oturum süresi kontrolü (2 Gün = 48 saat)
-        const loginTimeStr = localStorage.getItem('evCoffeeLoginTime');
-        const storedRole = localStorage.getItem('evCoffeeRole');
+        const loginTimeStr = localStorage.getItem('ergunCoffeeLoginTime');
+        const storedRole = localStorage.getItem('ergunCoffeeRole');
         
         // Eğer yönetici ise ve süre dolmuşsa at
         if (storedRole === UserRole.ADMIN && loginTimeStr) {
@@ -53,8 +53,8 @@ const App: React.FC = () => {
         }
       } else {
         setRole(UserRole.NONE);
-        localStorage.removeItem('evCoffeeRole');
-        localStorage.removeItem('evCoffeeLoginTime');
+        localStorage.removeItem('ergunCoffeeRole');
+        localStorage.removeItem('ergunCoffeeLoginTime');
       }
       setLoading(false);
     });
@@ -187,8 +187,8 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('evCoffeeRole');
-    localStorage.removeItem('evCoffeeLoginTime');
+    localStorage.removeItem('ergunCoffeeRole');
+    localStorage.removeItem('ergunCoffeeLoginTime');
     signOut(auth).catch(err => console.error("Çıkış hatası:", err));
   };
 
