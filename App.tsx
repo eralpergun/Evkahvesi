@@ -31,6 +31,7 @@ const App: React.FC = () => {
         // Oturum süresi kontrolü (2 Gün = 48 saat)
         const loginTimeStr = localStorage.getItem('ergunCoffeeLoginTime');
         const storedRole = localStorage.getItem('ergunCoffeeRole');
+        console.log("Stored role:", storedRole);
         
         // Eğer yönetici ise ve süre dolmuşsa at
         if (storedRole === UserRole.ADMIN && loginTimeStr) {

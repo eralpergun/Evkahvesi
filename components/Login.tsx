@@ -15,10 +15,10 @@ const Login: React.FC = () => {
     setError(null);
     
     // Role ve Zamanı Kaydet
-    localStorage.setItem('evCoffeeRole', targetRole);
+    localStorage.setItem('ergunCoffeeRole', targetRole);
     // Yönetici ise giriş zamanını kaydet (2 gün kontrolü için)
     if (targetRole === UserRole.ADMIN) {
-        localStorage.setItem('evCoffeeLoginTime', Date.now().toString());
+        localStorage.setItem('ergunCoffeeLoginTime', Date.now().toString());
     }
 
     try {
@@ -26,8 +26,8 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error("Giriş hatası:", err);
       // Hata durumunda storage'ı temizle
-      localStorage.removeItem('evCoffeeRole');
-      localStorage.removeItem('evCoffeeLoginTime');
+      localStorage.removeItem('ergunCoffeeRole');
+      localStorage.removeItem('ergunCoffeeLoginTime');
       
       if (err.code === 'auth/configuration-not-found') {
         setError("Firebase Konsolunda 'Anonymous' oturum açma yöntemi etkinleştirilmemiş.");
@@ -52,6 +52,8 @@ const Login: React.FC = () => {
           setPassword('');
       }
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 md:p-6 bg-[#fcfaf7]">
@@ -92,7 +94,7 @@ const Login: React.FC = () => {
                     </div>
                 </button>
 
-                {/* Barista Girişi Butonu (Şifre Ekranını Açar) */}
+                {/* Barista Girişi Butonu */}
                 <button 
                     onClick={handleAdminClick}
                     disabled={loading}

@@ -80,6 +80,7 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting order...", { name, selectedCoffee, size, percentage, milkLevel });
 
     // Fallback: Eğer form submit tetiklenirse (örneğin mobilde Enter tuşuyla)
     // ve henüz son adımda değilsek, bir sonraki adıma geçmeyi dene.
@@ -107,7 +108,9 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
         orderPayload.milkLevel = milkLevel;
       }
 
+      console.log("Order payload:", orderPayload);
       const orderId = await onPlaceOrder(orderPayload);
+      console.log("Order result:", orderId);
 
       if (orderId) {
         setMyOrderIds(prev => [orderId, ...prev]);
@@ -117,10 +120,14 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
         setSelectedCoffee(null);
         setMilkLevel('Standart');
         setPercentage(50);
+      } else {
+        console.error("Order failed: No orderId returned");
+        alert("Sipariş gönderilemedi: Sunucudan yanıt alınamadı.");
       }
       
     } catch (error) {
-      // Hata App.tsx'te handle ediliyor
+      console.error("Order submission error:", error);
+      alert("Sipariş gönderilirken bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsSubmitting(false);
     }
@@ -424,22 +431,22 @@ const GuestDashboard: React.FC<GuestDashboardProps> = ({ orders, onPlaceOrder, o
                             {/* Sertlik Ayarı */}
                             <div>
                                 <div className="flex justify-between mb-3 md:mb-4">
-                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Kahve Sertliği</label>
-                                <span className="text-xs font-black text-stone-800">%{percentage}</span>
+                                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">Kahve Sertliği</label>
+                                  <span className="text-xs font-black text-stone-800 bg-stone-100 px-2 py-1 rounded-lg">%{percentage}</span>
                                 </div>
                                 <input 
-                                type="range" 
-                                min="0" 
-                                max="100" 
-                                step="5"
-                                className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-stone-800"
-                                value={percentage}
-                                onChange={(e) => setPercentage(parseInt(e.target.value))}
+                                  type="range" 
+                                  min="0" 
+                                  max="100" 
+                                  step="5"
+                                  className="w-full h-3 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-stone-800"
+                                  value={percentage}
+                                  onChange={(e) => setPercentage(parseInt(e.target.value))}
                                 />
                                 <div className="flex justify-between mt-2 md:mt-3 text-[9px] text-stone-300 font-black uppercase tracking-widest">
-                                <span>Hafif</span>
-                                <span>Dengeli</span>
-                                <span>Sert</span>
+                                  <span>Hafif</span>
+                                  <span>Dengeli</span>
+                                  <span>Sert</span>
                                 </div>
                             </div>
 
